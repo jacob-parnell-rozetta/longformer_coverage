@@ -10,7 +10,10 @@
 Links to the pre-trained Longformer models can be found in the `Longformer` repo.
 You can download the WCEP dataset directly from [here](https://github.com/complementizer/wcep-mds-dataset).
 
-After downloading WCEP data, the data is converted to `.jsonl` format manually to be loaded by the HF Datasets loader.
+To use the first 1000 samples for fine-tuning, we simply run:
+```
+head -1000 train.jsonl > train-1000.jsonl
+```
 
 ### Run Code
 ```
