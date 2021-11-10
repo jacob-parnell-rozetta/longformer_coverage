@@ -1,5 +1,4 @@
 # <p align=center>`A Multi-Document Coverage Reward for RELAXed Multi-Document Summarization`</p>
-### [update: Nov 2021]: Public release of code
 
 ## Code
 `scripts/alternate_objectives.py`: Contains metrics used during training, and architecture for RELAX and gumbel sampling.
