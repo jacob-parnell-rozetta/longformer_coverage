@@ -85,11 +85,11 @@ class SummarizationDataset(Dataset):
 
         if self.ds_name == "multinews":
             # nll pre-training
-            # input_ids = self.tokenizer.encode(entry['document'], truncation=True, max_length=self.max_input_len)
-            # output_ids = self.tokenizer.encode(entry['summary'], truncation=True, max_length=self.max_output_len)
+            input_ids = self.tokenizer.encode(entry['document'], truncation=True, max_length=self.max_input_len)
+            output_ids = self.tokenizer.encode(entry['summary'], truncation=True, max_length=self.max_output_len)
             # fine-tuning
-            input_ids = self.tokenizer.encode(entry['src_str'], truncation=True, max_length=self.max_input_len)
-            output_ids = self.tokenizer.encode(entry['tgt_str'], truncation=True, max_length=self.max_output_len)
+            # input_ids = self.tokenizer.encode(entry['src_str'], truncation=True, max_length=self.max_input_len)
+            # output_ids = self.tokenizer.encode(entry['tgt_str'], truncation=True, max_length=self.max_output_len)
 
         elif self.ds_name == "wcep":
             # WCEP
@@ -259,7 +259,8 @@ class Summarizer(pl.LightningModule):
         else:  # otherwise
             return [loss]
 
-    def training_step(self, batch, batch_nb, optimizer_idx):
+    def training_step(self, batch, batch_nb):  # , optimizer_idx):
+        # optimizer_idx should only be used with RELAX
         for p in self.model.parameters():
             p.requires_grad = True
         if "relax" in self.args["custom_method"]:
@@ -528,6 +529,7 @@ def main(args):
     )
 
     print(args)
+    print(model.summarize(mode='top'))
 
     trainer = pl.Trainer(gpus=args.gpus, distributed_backend='ddp' if torch.cuda.is_available() else None,
                          track_grad_norm=-1,
@@ -536,7 +538,7 @@ def main(args):
                          replace_sampler_ddp=False,
                          accumulate_grad_batches=args.grad_accum,
                          val_check_interval=args.val_every if not args.debug else 1,
-                         num_sanity_val_steps=2 if not args.debug else 0,
+                         num_sanity_val_steps=0 if not args.debug else 0,
                          check_val_every_n_epoch=1 if not args.debug else 1,
                          val_percent_check=args.val_percent_check,
                          test_percent_check=args.val_percent_check,
