@@ -8,7 +8,7 @@
 `scripts/summarization.py`: Main file with model forward pass.
 
 Links to the pre-trained Longformer models can be found in the `Longformer` repo.
-You can download the WCEP dataset directly from [here](https://github.com/complementizer/wcep-mds-dataset).
+Appendix A.2. in the paper provides links to the datasets used in these experiments.
 
 To use the first 1000 samples for fine-tuning, we simply run:
 ```
