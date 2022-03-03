@@ -1,5 +1,12 @@
 # <p align=center>`A Multi-Document Coverage Reward for RELAXed Multi-Document Summarization`</p>
 
+This repository contains the implementation for our paper:
+```
+A Multi-Document Coverage Reward for RELAXed Multi-Document Summarization
+Jacob Parnell, Inigo Jauregi Unanue, Massimo Piccardi
+ACL 2022
+```
+
 ## Code
 `scripts/alternate_objectives.py`: Contains metrics used during training, and architecture for RELAX and gumbel sampling.
 
@@ -39,5 +46,10 @@ model.load_state_dict(checkpoint['state_dict'], strict=False)
 ```
 
 ## Acknowledgements
-This code is based off of the [Longformer](https://github.com/allenai/longformer) repo.
+This code is based off of the [Longformer](https://github.com/allenai/longformer) repo, and uses [PyTorch Lightning](https://github.com/PyTorchLightning/pytorch-lightning)
 We also utilise parts of the code from [RELAX](https://github.com/duvenaud/relax), and [Newsroom](https://github.com/lil-lab/newsroom) to implement the coverage reward.
+
+## Citation
+Please cite our work using the following:
+```
+```
