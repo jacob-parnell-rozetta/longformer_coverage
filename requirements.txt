@@ -1,9 +1,10 @@
 transformers @ git+http://github.com/ibeltagy/transformers.git@longformer_encoder_decoder#egg=transformers
 pytorch-lightning @ git+http://github.com/ibeltagy/pytorch-lightning.git@v0.8.5_fixes#egg=pytorch-lightning
-torch==1.9.0
+torch==1.9.0  # Run this if it doesn't work: torch==1.9.0+cu111 -f https://download.pytorch.org/whl/torch_stable.html
 tensorboardX
 test-tube==0.7.5
 nlp
-rouge_score
+rouge_score==0.0.4
 datasets==1.6.2
-newsroom @ git+git://github.com/clic-lab/newsroom.git#egg=newsroom
+spacy==3.6.1
+# transformers @ git+https://github.com/huggingface/transformers.git@d0acc95

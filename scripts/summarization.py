@@ -12,8 +12,8 @@ from rouge_score import rouge_scorer
 
 import pytorch_lightning as pl
 from pytorch_lightning.loggers import TestTubeLogger
-from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
-from pytorch_lightning.overrides.data_parallel import LightningDistributedDataParallel
+from pytorch_lightning.callbacks import ModelCheckpoint
+from torch.nn.parallel import DistributedDataParallel
 
 from longformer.longformer_encoder_decoder import LongformerEncoderDecoderForConditionalGeneration, \
     LongformerEncoderDecoderConfig
@@ -234,7 +234,10 @@ class Summarizer(pl.LightningModule):
 
                 lprobs_gumbel_y = torch.gather(lprobs, -1, gumbel_y.t().unsqueeze(0)).squeeze(-1)
                 lprobs_gumbel_y = torch.add(lprobs_gumbel_y, 1e-8)
-                relax_loss = torch.mul((soft_f - c_zt_prime.unsqueeze(0).squeeze(2)), lprobs_gumbel_y) - c_zt.unsqueeze(0).squeeze(2) + c_z.unsqueeze(0).squeeze(2)
+                # RELAX operator used for the results in the paper
+                # relax_loss = torch.mul((soft_f - c_zt_prime.unsqueeze(0).squeeze(2)), lprobs_gumbel_y) - c_zt.unsqueeze(0).squeeze(2) + c_z.unsqueeze(0).squeeze(2)
+                # RELAX operator with the correct signs for bias offset
+                relax_loss = torch.mul((soft_f - c_zt_prime.unsqueeze(0).squeeze(2)), lprobs_gumbel_y) + c_zt.unsqueeze(0).squeeze(2) - c_z.unsqueeze(0).squeeze(2)
                 relax_loss = relax_loss.mean(1)  # average across T (loss per token)
 
             else:
@@ -408,23 +411,23 @@ class Summarizer(pl.LightningModule):
                           num_workers=self.args['num_workers'], sampler=sampler,
                           collate_fn=SummarizationDataset.collate_fn)
 
-    @pl.data_loader
+    # @pl.data_loader
     def train_dataloader(self):
         self.train_dataloader_object = self._get_dataloader(self.train_dataloader_object, 'train', is_train=True)
         return self.train_dataloader_object
 
-    @pl.data_loader
+    # @pl.data_loader
     def val_dataloader(self):
         self.val_dataloader_object = self._get_dataloader(self.val_dataloader_object, 'validation', is_train=False)
         return self.val_dataloader_object
 
-    @pl.data_loader
+    # @pl.data_loader
     def test_dataloader(self):
         self.test_dataloader_object = self._get_dataloader(self.test_dataloader_object, 'test', is_train=False)
         return self.test_dataloader_object
 
     def configure_ddp(self, model, device_ids):
-        model = LightningDistributedDataParallel(
+        model = DistributedDataParallel(
             model,
             device_ids=device_ids,
             find_unused_parameters=False
@@ -531,22 +534,24 @@ def main(args):
     print(args)
     print(model.summarize(mode='top'))
 
-    trainer = pl.Trainer(gpus=args.gpus, distributed_backend='ddp' if torch.cuda.is_available() else None,
+    trainer = pl.Trainer(gpus=args.gpus,  # accelerator='ddp',
+                         #distributed_backend='ddp' if torch.cuda.is_available() else None,
+                         # val_check_interval=0.5,
                          track_grad_norm=-1,
                          max_epochs=args.epochs if not args.debug else 100,
                          max_steps=None if not args.debug else 1,
                          replace_sampler_ddp=False,
                          accumulate_grad_batches=args.grad_accum,
                          val_check_interval=args.val_every if not args.debug else 1,
-                         num_sanity_val_steps=0 if not args.debug else 0,
+                         num_sanity_val_steps=2 if not args.debug else 0,
                          check_val_every_n_epoch=1 if not args.debug else 1,
                          val_percent_check=args.val_percent_check,
                          test_percent_check=args.val_percent_check,
                          logger=logger,
                          checkpoint_callback=checkpoint_callback if not args.disable_checkpointing else False,
                          progress_bar_refresh_rate=1, show_progress_bar=not args.no_progress_bar,
-                         use_amp=False,
-                         amp_level='O2',
+                         #use_amp=False,
+                         amp_level='apex',
                          resume_from_checkpoint=args.resume_ckpt,
                          )
     if not args.test:

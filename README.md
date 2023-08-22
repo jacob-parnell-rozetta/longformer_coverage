@@ -8,7 +8,24 @@ ACL 2022
 ```
 [https://aclanthology.org/2022.acl-long.351/](https://aclanthology.org/2022.acl-long.351/)
 
+## UPDATE: 22nd August 2023
+We have adjusted Lines 240-243 in ```src/summarization.py```, and have also observed the following dependency issues
+which we have provided workarounds for:
+```commandline
+ERROR: Could not find a version that satisfies the requirement newsroom (unavailable) (from versions: 1.0)
+ERROR: No matching distribution found for newsroom (unavailable)
+```
+We have added ```scripts/fragments.py``` to circumvent the need to install this dependency.
+
+There are also updates to the ```requirements.txt``` file which contains updated packages.
+
+As of writing this update, you may also run into the following error reported when downloading Multi-News:
+[Checksum error when loading multi-news dataset](https://github.com/huggingface/datasets/issues/3730)
+
 ## Code
+Create a virtual environment using Python 3.6.8. We have found that other versions of Python may not work with the
+prescribed ```requirements.txt``` file.
+
 `scripts/alternate_objectives.py`: Contains metrics used during training, and architecture for RELAX and gumbel sampling.
 
 `scripts/xyz_dataset.py`: HuggingFace Datasets loader scripts (for fine-tuning).
@@ -32,6 +49,7 @@ python3 scripts/summarization.py --save_dir='multinews_pretrain' --model_path='l
 ```
 # Run fine-tuning (e.g. ROUGE-L + Coverage with RELAX)
 python3 scripts/summarization.py --lr 0.000003 --fine_tuning --save_dir="multinews_finetune" --model_path='longformer-encdec-large-16384' --from_pretrained='multinews_pretrain/test/{name_of_ckpt}.ckpt' --grad_ckpt --max_output_len 256 --dataset='multinews' --num_dataset_examples='1000' --epochs 1 --custom_method=rougecov1_relax
+# Note: remember to add in optimizer_idx into Line 265 of scripts/summarization.py
 ```
 
 ### Additional Notes
@@ -39,6 +57,10 @@ Due to the use of legacy `pytorch-lightning` code, and newer `torch` code, code 
 
 In `{virtual-env-name}/lib64/python3.6/site-packages/pytorch_lightning/core/saving.py`, to allow fine-tuning to run, change the following:
 ```
+# Line 195 - do not modify cls_args
+# cls_args = (model_args,) + cls_args  (CHANGE THIS TO BELOW)
+cls_args = cls_args
+
 # Line 205 - remove **cls_kwargs
 model = cls(*cls_args) #, **cls_kwargs)
 

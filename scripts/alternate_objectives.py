@@ -5,7 +5,8 @@ from nltk.translate.meteor_score import single_meteor_score
 # Reward function packages
 import torch
 import numpy as np
-from newsroom.analyze import Fragments
+# from newsroom.analyze import Fragments
+from scripts.fragments import Fragments
 
 
 class TrainingRewardMetrics:
